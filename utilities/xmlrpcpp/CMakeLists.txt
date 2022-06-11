@@ -39,6 +39,7 @@ add_library(xmlrpcpp
   libb64/src/cdecode.c
   libb64/src/cencode.c
 )
+set_target_properties(xmlrpcpp PROPERTIES VERSION ${xmlrpcpp_VERSION} SOVERSION "3d")
 
 target_link_libraries(xmlrpcpp ${catkin_LIBRARIES})
 if(WIN32)

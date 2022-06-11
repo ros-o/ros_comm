@@ -19,6 +19,7 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
 
 add_library(${PROJECT_NAME} src/connection.cpp)
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${message_filters_VERSION} SOVERSION "1d")
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 install(TARGETS ${PROJECT_NAME}

@@ -130,6 +130,7 @@ if(WIN32)
   add_definitions(-DNOGDI)
 endif()
 
+set_target_properties(roscpp PROPERTIES VERSION ${roscpp_VERSION} SOVERSION "4d")
 add_dependencies(roscpp ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(roscpp

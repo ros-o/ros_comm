@@ -36,6 +36,7 @@ endif()
 set_source_files_properties(
   src/lz4s.c src/xxhash.c
 PROPERTIES COMPILE_DEFINITIONS "XXH_NAMESPACE=ROSLZ4_")
+set_target_properties(roslz4 PROPERTIES VERSION ${roslz4_VERSION} SOVERSION "1d")
 target_link_libraries(roslz4 ${lz4_LIBRARIES} ${catkin_LIBRARIES})
 
 if(NOT ANDROID)

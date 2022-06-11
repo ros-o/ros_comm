@@ -51,6 +51,7 @@ add_library(rosbag_storage
   src/view.cpp
   src/uncompressed_stream.cpp
 )
+set_target_properties(rosbag_storage PROPERTIES VERSION ${rosbag_storage_VERSION} SOVERSION "4d")
 target_link_libraries(rosbag_storage ${catkin_LIBRARIES} ${Boost_LIBRARIES} ${BZIP2_LIBRARIES} ${console_bridge_LIBRARIES} ${AES_ENCRYPT_LIBRARIES})
 if(WIN32)
   # On Windows, default library runtime output set to CATKIN_GLOBAL_BIN_DESTINATION,
