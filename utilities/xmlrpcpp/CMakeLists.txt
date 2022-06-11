@@ -17,7 +17,6 @@ catkin_package(
 
 include_directories(
   include
-  libb64/include
   ${catkin_INCLUDE_DIRS}
 )
 link_directories(${catkin_LIBRARY_DIRS})
@@ -36,8 +35,6 @@ add_library(xmlrpcpp
   src/XmlRpcSource.cpp
   src/XmlRpcUtil.cpp
   src/XmlRpcValue.cpp
-  libb64/src/cdecode.c
-  libb64/src/cencode.c
 )
 set_target_properties(xmlrpcpp PROPERTIES VERSION ${xmlrpcpp_VERSION} SOVERSION "3d")
 
@@ -45,6 +42,8 @@ target_link_libraries(xmlrpcpp ${catkin_LIBRARIES})
 if(WIN32)
   target_link_libraries(xmlrpcpp ws2_32)
 endif()
+
+target_link_libraries(xmlrpcpp b64)
 
 install(DIRECTORY include/${PROJECT_NAME}
   DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}
