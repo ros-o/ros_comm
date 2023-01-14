@@ -84,6 +84,7 @@ configure_file(test/migrate_test.py.in
 catkin_add_nosetests(${PROJECT_BINARY_DIR}/test/migrate_test.py)
 configure_file(test/random_record.xml.in
   ${PROJECT_BINARY_DIR}/test/random_record.xml)
+
 add_rostest(${PROJECT_BINARY_DIR}/test/random_record.xml)
 # Make sure that the random_record test runs before either of the random_play
 # tests, both of which require a .bag file that the random_record test will
@@ -91,13 +92,17 @@ add_rostest(${PROJECT_BINARY_DIR}/test/random_record.xml)
 # by add_rostest(), but that naming scheme seems to be pretty stable.
 configure_file(test/random_play.xml.in
   ${PROJECT_BINARY_DIR}/test/random_play.xml)
+if(TARGET run_tests_test_rosbag_rostest_test_random_record.xml)
 add_rostest(${PROJECT_BINARY_DIR}/test/random_play.xml
   DEPENDENCIES run_tests_test_rosbag_rostest_test_random_record.xml)
 configure_file(test/random_play_sim.xml.in
   ${PROJECT_BINARY_DIR}/test/random_play_sim.xml)
 add_rostest(${PROJECT_BINARY_DIR}/test/random_play_sim.xml
   DEPENDENCIES run_tests_test_rosbag_rostest_test_random_record.xml)
+endif()
 
 # Make sure that rostest random_record.xml is not executed twice, running in
 # parallel (https://github.com/ros/ros_comm/pull/1651#issuecomment-482148146):
+if(TARGET run_tests_test_rosbag_rostest_test_random_play.xml)
 add_dependencies(run_tests_test_rosbag_rostest_test_random_play.xml run_tests_test_rosbag_rostest_test_random_play_sim.xml)
+endif()
