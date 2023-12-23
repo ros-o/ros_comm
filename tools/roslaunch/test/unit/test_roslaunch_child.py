@@ -53,6 +53,8 @@ class ProcessMonitorMock(object):
         self.core_procs = []
         self.procs = []
         self.listeners = []
+        # TODO(lucasw) didn't need this exit code in Ubuntu 20.04, but 23.04 (and 22.04?) does
+        self.exit_code = 0
         
     def join(self, timeout=0):
         pass
