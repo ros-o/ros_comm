@@ -1,0 +1,175 @@
+name: Ubuntu 22.04 One install
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-ros-one:
+    runs-on: ubuntu-22.04
+
+    env:
+      ACCEPT_EULA: true
+      ROSCONSOLE_FORMAT: '[${severity}] [${time} ${node} ${shortfile}:${line}]: ${message}'
+      ROS_CI_DESKTOP: "`lsb_release -cs`"  # e.g. [trusty|xenial|...]
+      ROS_ROOT: /opt/share/ros
+      DEST: /home/runner/work/other/ros_comm/ros_comm/other/install
+
+    steps:
+
+      - name: git clone this repo
+        uses: actions/checkout@v4
+        with:
+          path: install_catkin_ws/src/ros_comm
+
+      - name: find files with trailing whitespace
+        run: |
+          ls -l
+          cd install_catkin_ws/src
+          # TODO(lucasw) too many to exclude
+          # ! find * -type f -regextype posix-extended -regex '.*\.(cpp|csv|h|hpp|json|launch|md|msg|perspective|py|rviz|sh|test|txt|urdf|xacro|xml|yaml)' -exec egrep -l " +$" {} \; | grep .
+
+      - name: find files with windows line endings
+        run: |
+          cd install_catkin_ws/src
+          ! grep -IUr --exclude-dir='.*' --color $'\r' -l src
+
+      - name: Setup for ROS install
+        run: |
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
+
+      - name: install packages missing from container
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -yqq git
+          sudo apt-get install -yqq unzip
+          sudo apt-get install -yqq wget
+          sudo apt-get install -yqq libgtest-dev
+
+      - name: Install non-ROS dependencies
+        run: |
+          sudo apt-get install -yqq libboost-dev
+          sudo apt-get install -yqq libb64-dev
+          sudo apt-get install -yqq libeigen3-dev
+          sudo apt-get install -yqq libfmt-dev
+          sudo apt-get install -yqq libgmock-dev
+          sudo apt-get install -yqq python-is-python3 python3-venv
+          sudo apt-get install -yqq python3-numpy
+          sudo apt-get install -yqq python3-psutil
+          sudo apt-get install -yqq python3-vcstools
+
+      - name: Install ROS basic packages
+        run: |
+          sudo apt-get install -yqq ros-*
+          sudo apt-get install -yqq catkin-lint
+          # sudo apt-get install -yqq python3-catkin-pkg
+          sudo apt-get install -yqq python3-rosdep2
+          # sudo apt-get install -yqq python3-rospkg
+          # sudo apt-get install -yqq python3-wstool
+          # don't need this on 22.04, already exists
+          # sudo rosdep init
+          # rosdep update
+
+      - name: Install ROS additional packages with rosdep
+        run: |
+          cd install_catkin_ws
+          # rosdep install --from-paths src --ignore-src -r -s  # do a dry-run first
+          # rosdep install --from-paths src --ignore-src -r -y
+
+      - name: python version
+        run: |
+          mkdir -p other/src
+          echo "DEST=$HOME/other/install" >> $GITHUB_ENV
+          # echo "$DEST/bin" >> $GITHUB_PATH
+          echo PYTHON_MAJOR_VERSION=`python --version | awk  '{print $2}' | cut -d'.' -f1` >> $GITHUB_ENV
+          echo PYTHON_MINOR_VERSION=`python --version | awk  '{print $2}' | cut -d'.' -f2` >> $GITHUB_ENV
+
+      - name: python path setup
+        run: |
+          echo "PATH=$PATH:$DEST/bin" >> $GITHUB_ENV
+          # a roswtf test errors out if this doesn't exist
+          export DEST_PYTHONPATH=$DEST/lib/python$PYTHON_MAJOR_VERSION.$PYTHON_MINOR_VERSION/site-packages/
+          mkdir -p $DEST_PYTHONPATH
+          echo "PYTHONPATH=$DEST_PYTHONPATH" >> $GITHUB_ENV
+
+      # available in apt in 23.04 and later
+      - name: git clone pycommon
+        uses: actions/checkout@v4
+        with:
+          repository: osrf/osrf_pycommon
+          path: other/src/osrf_pycommon
+
+      - name: pycommon
+        run: |
+          cd other/src
+          cd osrf_pycommon
+          python3 setup.py install --prefix=$DEST --record install_manifest.txt --single-version-externally-managed
+
+      # catkin-tools is available through apt in 23.04 and later
+      - name: git clone catkin tools
+        uses: actions/checkout@v4
+        with:
+          repository: catkin/catkin_tools
+          path: other/src/catkin_tools
+
+      - name: catkin tools
+        run: |
+          cd other/src
+          cd catkin_tools
+          python3 setup.py install --prefix=$DEST --record install_manifest.txt --single-version-externally-managed
+          which catkin
+          catkin --version
+
+      - name: catkin config
+        run: |
+          echo $CMAKE_PREFIX_PATH
+          cd install_catkin_ws
+          catkin config --install --cmake-args -DCMAKE_BUILD_TYPE=Release -Wno-deprecated -DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES=$DEST/include -DCMAKE_CXX_STANDARD=17
+
+      - name: catkin build
+        run: |
+          cd install_catkin_ws
+          echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$DEST:$DEST/lib/cmake" >> $GITHUB_ENV
+          catkin build --no-status
+
+      - name: build with catkin_make
+        run: |
+          # TODO(lucasw) catkin_make works better for test output
+          mkdir catkin_make_ws
+          cd catkin_make_ws
+          ln -s ../install_catkin_ws/src
+          catkin_make
+
+      - name: run tests with catkin_make
+        run: |
+          cd catkin_make_ws
+          source devel/setup.bash
+          catkin_make run_tests
+
+      - name: get test results
+        run: |
+          cd catkin_make_ws
+          source devel/setup.bash
+          catkin_test_results
+
+      - name: tar up install_catkin_ws
+        run: |
+          tar cvzf install_catkin_ws.tgz install_catkin_ws/install
+          ls -l
+
+      - name: update install_catkin_ws.tgz
+        uses: actions/upload-artifact@v4
+        with:
+          name: install_catkin_ws
+          path: install_catkin_ws.tgz
+
+      - name: roslint
+        run: |
+          cd install_catkin_ws
+          source install/setup.bash
+          # currently no packages depend on roslint
+          catkin build $(catkin list --depends-on roslint -u) --no-status --no-deps --catkin-make-args roslint || true
+          LINT_CFG="-W2 --error unsorted_list --ignore uninstalled_script --error launch_depend --error description_meaningless"
+          # ignore errors from this for now
+          catkin_lint src $LINT_CFG || true
