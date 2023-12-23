@@ -234,7 +234,7 @@ class TestRoslaunchParent(unittest.TestCase):
         p._init_remote()
         self.assert_(p.remote_runner is not None)
 
-        self.failIf(pmon.is_shutdown)
+        self.assertFalse(pmon.is_shutdown)
         p.shutdown()
         self.assert_(pmon.is_shutdown)        
 
