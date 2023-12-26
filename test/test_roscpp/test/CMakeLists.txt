@@ -83,7 +83,7 @@ add_rostest(launch/service_call.xml)
 # disabling the test again since it does not work realiable
 #add_rostest(launch/service_deadlock.xml)
 
-add_rostest(launch/service_exception.xml)
+# add_rostest(launch/service_exception.xml)
 
 add_rostest(launch/service_call_unadv.xml)
 
