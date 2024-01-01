@@ -109,7 +109,7 @@ try:
             else:
                 raise ValueError
 
-            log_out = ' '.join([
+            expected_log_out = ' '.join([
                 'INFO',
                 'on ' + loc,
                 r'[0-9]*\.[0-9]*',
@@ -124,7 +124,8 @@ try:
                 r'[0-9]*\.[0-9]*',
                 r'[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}',
             ])
-            assert_regexp_matches(lout.getvalue().splitlines()[i], log_out)
+            log_out = lout.getvalue().splitlines()[i]
+            assert_regexp_matches(log_out, expected_log_out)
 
 finally:
 
