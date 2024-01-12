@@ -1,0 +1,139 @@
+name: Ubuntu 20.04 Noetic install
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build-ros-noetic:
+    runs-on: ubuntu-20.04
+
+    env:
+      ACCEPT_EULA: true
+      ROSCONSOLE_FORMAT: '[${severity}] [${time} ${node} ${shortfile}:${line}]: ${message}'
+      ROS_DISTRO: noetic
+      ROS_CI_DESKTOP: "`lsb_release -cs`"  # e.g. [trusty|xenial|...]
+      DEST: /home/runner/work/other/ros_comm/ros_comm/other/install
+
+    steps:
+
+      - name: git clone this repo
+        uses: actions/checkout@v4
+        with:
+          path: install_catkin_ws/src/ros_comm
+
+      - name: find files with trailing whitespace
+        run: |
+          ls -l
+          cd install_catkin_ws/src
+          # TODO(lucasw) too many to exclude
+          # ! find * -type f -regextype posix-extended -regex '.*\.(cpp|csv|h|hpp|json|launch|md|msg|perspective|py|rviz|sh|test|txt|urdf|xacro|xml|yaml)' -exec egrep -l " +$" {} \; | grep .
+
+      - name: find files with windows line endings
+        run: |
+          cd install_catkin_ws/src
+          ! grep -IUr --exclude-dir='.*' --color $'\r' -l src
+
+      - name: Setup for ROS install
+        run: |
+          sudo sh -c "echo \"deb http://packages.ros.org/ros/ubuntu $ROS_CI_DESKTOP main\" > /etc/apt/sources.list.d/ros-latest.list"
+          sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+          sudo apt-get update -y
+
+      - name: install packages missing from container
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -yqq git
+          sudo apt-get install -yqq unzip
+          sudo apt-get install -yqq wget
+          sudo apt-get install -yqq libgtest-dev
+
+      - name: Install non-ROS dependencies
+        run: |
+          sudo apt-get install -yqq libboost-dev
+          sudo apt-get install -yqq libb64-dev
+          sudo apt-get install -yqq libeigen3-dev
+          sudo apt-get install -yqq libfmt-dev
+          sudo apt-get install -yqq libgmock-dev
+          sudo apt-get install -yqq python3-numpy
+          sudo apt-get install -yqq python3-vcstool
+
+      - name: Install ROS basic packages
+        run: |
+          sudo apt-get install -yqq catkin-lint
+          sudo apt-get install -yqq python3-catkin-pkg
+          sudo apt-get install -yqq python3-catkin-tools
+          sudo apt-get install -yqq python3-rosdep
+          sudo apt-get install -yqq python3-rospkg
+          sudo apt-get install -yqq python3-wstool
+          sudo apt-get install -yqq python3-osrf-pycommon
+          sudo apt-get install -yqq ros-cmake-modules
+          sudo apt-get install -yqq ros-$ROS_DISTRO-ros-base
+          sudo apt-get install -yqq ros-noetic-catkin
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          catkin_test_results
+          sudo rosdep init
+          rosdep update
+
+      - name: Install ROS additional packages with rosdep
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          cd install_catkin_ws
+          rosdep install --from-paths src --ignore-src -r -s  # do a dry-run first
+          rosdep install --from-paths src --ignore-src -r -y
+
+      - name: catkin config
+        run: |
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          echo $CMAKE_PREFIX_PATH
+          cd install_catkin_ws
+          catkin config --install --cmake-args -DCMAKE_BUILD_TYPE=Release -Wno-deprecated -DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES=$DEST/include -DCMAKE_CXX_STANDARD=17
+
+      - name: catkin build
+        run: |
+          cd install_catkin_ws
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          export CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$DEST:$DEST/lib/cmake
+          catkin build --no-status
+
+      - name: build with catkin_make
+        run: |
+          # TODO(lucasw) catkin_make works better for test output
+          mkdir catkin_make_ws
+          cd catkin_make_ws
+          ln -s ../install_catkin_ws/src
+          source /opt/ros/$ROS_DISTRO/setup.bash
+          catkin_make
+
+      - name: run tests with catkin_make
+        run: |
+          cd catkin_make_ws
+          source devel/setup.bash
+          catkin_make run_tests
+
+      - name: get test results
+        run: |
+          cd catkin_make_ws
+          source devel/setup.bash
+          catkin_test_results
+
+      - name: tar up install_catkin_ws
+        run: |
+          tar cvzf install_catkin_ws.tgz install_catkin_ws/install
+          ls -l
+
+      - name: update install_catkin_ws.tgz
+        uses: actions/upload-artifact@v4
+        with:
+          name: install_catkin_ws
+          path: install_catkin_ws.tgz
+
+      - name: roslint
+        run: |
+          cd install_catkin_ws
+          source install/setup.bash
+          # currently no packages depend on roslint
+          catkin build $(catkin list --depends-on roslint -u) --no-status --no-deps --catkin-make-args roslint || true
+          LINT_CFG="-W2 --error unsorted_list --ignore uninstalled_script --error launch_depend --error description_meaningless"
+          # ignore errors from this for now
+          catkin_lint src $LINT_CFG || true

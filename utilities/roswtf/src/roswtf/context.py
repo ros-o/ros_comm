@@ -296,11 +296,11 @@ def _load_env(ctx, env):
     """
     ctx.env = env
     try:
-        ctx.ros_root = env[rospkg.environment.ROS_ROOT]
+        ctx.ros_root = env.get(rospkg.environment.ROS_ROOT, '/usr/share/ros')
     except KeyError:
         raise WtfException("ROS_ROOT is not set")
-    ctx.ros_package_path = env.get(rospkg.environment.ROS_PACKAGE_PATH, None)
-    ctx.pythonpath = env.get('PYTHONPATH', None)
+    ctx.ros_package_path = env.get(rospkg.environment.ROS_PACKAGE_PATH, '/usr/share/ros')
+    ctx.pythonpath = env.get('PYTHONPATH', '/usr/lib/python3/dist-packages/')
     ctx.ros_master_uri = rosgraph.rosenv.get_master_uri()
 
     

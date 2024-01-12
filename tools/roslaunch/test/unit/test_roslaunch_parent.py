@@ -59,6 +59,8 @@ class ProcessMonitorMock(object):
         self.procs = []
         self.listeners = []
         self.is_shutdown = False
+        # TODO(lucasw) didn't need this exit code in Ubuntu 20.04, but 23.04 (and 22.04?) does
+        self.exit_code = 0
         
     def join(self, timeout=0):
         pass
@@ -140,9 +142,9 @@ class TestRoslaunchParent(unittest.TestCase):
         server_uri = 'http://localhost:12345'
         
         p = ROSLaunchParent(run_id, [], is_core = True, port=None, local_only=False)
-        self.assertEquals(run_id, p.run_id)
-        self.assertEquals(True, p.is_core)
-        self.assertEquals(False, p.local_only)
+        self.assertEqual(run_id, p.run_id)
+        self.assertEqual(True, p.is_core)
+        self.assertEqual(False, p.local_only)
 
         rl_dir = rospkg.RosPack().get_path('roslaunch')
         rl_file = os.path.join(rl_dir, 'resources', 'example.launch')
@@ -150,9 +152,9 @@ class TestRoslaunchParent(unittest.TestCase):
         
         # validate load_config logic
         p = ROSLaunchParent(run_id, [rl_file], is_core = False, port=None, local_only=True)
-        self.assertEquals(run_id, p.run_id)
-        self.assertEquals(False, p.is_core)
-        self.assertEquals(True, p.local_only)
+        self.assertEqual(run_id, p.run_id)
+        self.assertEqual(False, p.is_core)
+        self.assertEqual(True, p.local_only)
 
         self.assert_(p.config is None)
         p._load_config()
@@ -161,12 +163,12 @@ class TestRoslaunchParent(unittest.TestCase):
 
         # try again with port override
         p = ROSLaunchParent(run_id, [rl_file], is_core = False, port=11312, local_only=True)
-        self.assertEquals(11312, p.port)
+        self.assertEqual(11312, p.port)
         self.assert_(p.config is None)
         p._load_config()
         # - make sure port got passed into master
         _, port = rosgraph.network.parse_http_host_and_port(p.config.master.uri)
-        self.assertEquals(11312, port)
+        self.assertEqual(11312, port)
 
         # try again with bad file
         p = ROSLaunchParent(run_id, ['non-existent-fake.launch'])
@@ -232,7 +234,7 @@ class TestRoslaunchParent(unittest.TestCase):
         p._init_remote()
         self.assert_(p.remote_runner is not None)
 
-        self.failIf(pmon.is_shutdown)
+        self.assertFalse(pmon.is_shutdown)
         p.shutdown()
         self.assert_(pmon.is_shutdown)        
 

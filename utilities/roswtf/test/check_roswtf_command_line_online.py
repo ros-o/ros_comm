@@ -84,6 +84,8 @@ class TestRostopicOnline(unittest.TestCase):
             'cpp_common', 'roscpp_serialization', 'roscpp_traits', 'rostime',  # roscpp_core
             'rosbuild', 'rosclean', 'rosunit',  # ros
             'rospack', 'std_msgs', 'message_runtime', 'message_generation', 'gencpp', 'genlisp', 'genpy', 'genmsg', 'catkin',
+            # TODO(lucasw) these aren't needed in 22.04, only in 20.04
+            'rosmake', 'ros_environment', 'diagnostic_msgs', 'pluginlib', 'rosbash', 'class_loader',
         ]
         try:
             paths = [rospack.get_path(pkg) for pkg in pkgs]

@@ -27,6 +27,7 @@ add_library(rosbag
   src/player.cpp
   src/recorder.cpp
   src/time_translator.cpp)
+set_target_properties(rosbag PROPERTIES VERSION ${rosbag_VERSION} SOVERSION "4d")
 
 target_link_libraries(rosbag ${catkin_LIBRARIES} ${Boost_LIBRARIES}
   ${BZIP2_LIBRARIES}

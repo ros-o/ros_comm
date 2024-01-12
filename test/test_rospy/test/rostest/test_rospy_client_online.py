@@ -362,7 +362,7 @@ class TestRospyClientOnline(unittest.TestCase):
         while not t3.done and time.time() < timeout_t:
             time.sleep(0.5)
         self.assert_(t3.done)
-        self.failIf(t3.success)
+        self.assertFalse(t3.success)
 
     def test_wait_for_service_duration(self):
         # lazy-import for coverage
@@ -391,7 +391,7 @@ class TestRospyClientOnline(unittest.TestCase):
         while not t3.done and time.time() < timeout_t:
             time.sleep(0.5)
         self.assert_(t3.done)
-        self.failIf(t3.success)
+        self.assertFalse(t3.success)
     
     def test_ServiceProxy_wait_for_service(self):
         """
@@ -436,7 +436,7 @@ class TestRospyClientOnline(unittest.TestCase):
         while not t3.done and time.time() < timeout_t:
             time.sleep(0.5)
         self.assert_(t3.done)
-        self.failIf(t3.success)
+        self.assertFalse(t3.success)
 
     def test_ServiceProxy_wait_for_service_duration(self):
         """
@@ -475,7 +475,7 @@ class TestRospyClientOnline(unittest.TestCase):
         while not t3.done and time.time() < timeout_t:
             time.sleep(0.5)
         self.assert_(t3.done)
-        self.failIf(t3.success)
+        self.assertFalse(t3.success)
 
     def test_sleep(self):
         import rospy
@@ -522,18 +522,18 @@ class TestRospyClientOnline(unittest.TestCase):
             rospy.get_param('not_a_param')
             self.fail("should have raised KeyError")
         except KeyError: pass
-        self.assertEquals('default_val', rospy.get_param('not_a_param', 'default_val') )
+        self.assertEqual('default_val', rospy.get_param('not_a_param', 'default_val') )
         
         p = rospy.get_param('/param')
-        self.assertEquals("value", p)
+        self.assertEqual("value", p)
         p = rospy.get_param('param')
-        self.assertEquals("value", p)
+        self.assertEqual("value", p)
         p = rospy.get_param('/group/param')
-        self.assertEquals("group_value", p)
+        self.assertEqual("group_value", p)
         p = rospy.get_param('group/param')
-        self.assertEquals("group_value", p)
+        self.assertEqual("group_value", p)
 
-        self.assertEquals('/param', rospy.search_param('param'))
+        self.assertEqual('/param', rospy.search_param('param'))
         
         names = rospy.get_param_names()
         self.assert_('/param' in names)
@@ -544,9 +544,9 @@ class TestRospyClientOnline(unittest.TestCase):
             
         rospy.set_param('param2', 'value2')
         self.assert_(rospy.has_param('param2'))
-        self.assertEquals('value2', rospy.get_param('param2'))
+        self.assertEqual('value2', rospy.get_param('param2'))
         rospy.delete_param('param2')
-        self.failIf(rospy.has_param('param2'))
+        self.assertFalse(rospy.has_param('param2'))
         try:
             rospy.get_param('param2')
             self.fail("should have raised KeyError")
@@ -589,7 +589,7 @@ class TestRospyClientOnline(unittest.TestCase):
         t3.start()
         while not t3.done and time.time() < timeout_t:
             time.sleep(0.5)
-        self.failIf(t3.success)
+        self.assertFalse(t3.success)
         self.assert_(t3.done)
         self.assert_(t3.value is None)
 
@@ -621,7 +621,7 @@ class TestRospyClientOnline(unittest.TestCase):
         t3.start()
         while not t3.done and time.time() < timeout_t:
             time.sleep(0.5)
-        self.failIf(t3.success)
+        self.assertFalse(t3.success)
         self.assert_(t3.done)
         self.assert_(t3.value is None)
     

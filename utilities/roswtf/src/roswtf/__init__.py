@@ -140,7 +140,7 @@ def _roswtf_main():
         static_plugins, online_plugins = [], []
         
     # - do a ros_root check first and abort if it fails as rest of tests are useless after that
-    error = ros_root_check(None, ros_root=os.environ['ROS_ROOT'])
+    error = ros_root_check(None, ros_root=os.environ.get('ROS_ROOT', '/usr/share/ros'))
     if error:
         print("ROS_ROOT is invalid: "+str(error))
         sys.exit(1)

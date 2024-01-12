@@ -33,6 +33,7 @@ catkin_package(
 catkin_add_env_hooks(20.transform SHELLS bash DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/env-hooks)
 
 add_library(topic_tools src/shape_shifter.cpp src/parse.cpp)
+set_target_properties(topic_tools PROPERTIES VERSION ${topic_tools_VERSION} SOVERSION "2d")
 target_link_libraries(topic_tools ${catkin_LIBRARIES})
 
 add_executable(switch_mux src/switch_mux.cpp)

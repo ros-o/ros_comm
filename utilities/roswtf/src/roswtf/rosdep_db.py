@@ -47,11 +47,11 @@ def rosdep_database_updated_check(ctx):
         return "Please update rosdep database with 'rosdep update'."
 
 
-warnings = []
+errors = []
 
-errors = [(rosdep_database_updated_check,
-           "ROS Dep database not updated: "),
-         ]
+warnings = [(rosdep_database_updated_check,
+            "ROS Dep database not updated: "),
+            ]
 
 
 def wtf_check(ctx):
