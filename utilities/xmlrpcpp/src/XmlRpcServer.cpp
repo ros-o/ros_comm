@@ -30,26 +30,6 @@ XmlRpcServer::XmlRpcServer()
     _accept_error(false),
     _accept_retry_time_sec(0.0)
 {
-#if !defined(_WINDOWS)
-  struct rlimit limit = { .rlim_cur = 0, .rlim_max = 0 };
-  unsigned int max_files = 1024;
-
-  if(getrlimit(RLIMIT_NOFILE, &limit) == 0) {
-    max_files = limit.rlim_max;
-    if( limit.rlim_max == RLIM_INFINITY ) {
-      max_files = 0;
-    }
-  } else {
-    XmlRpcUtil::error("Could not get open file limit: %s", strerror(errno));
-  }
-  pollfds.resize(max_files);
-  for(unsigned int i=0; i<max_files; i++) {
-    // Set up file descriptor query for all events.
-    pollfds[i].fd = i;
-    pollfds[i].events = POLLIN | POLLPRI | POLLOUT;
-  }
-#endif
-
   // Ask dispatch not to close this socket if it becomes unreadable.
   setKeepOpen(true);
 }
@@ -222,51 +202,7 @@ bool XmlRpcServer::enoughFreeFDs() {
   // If the underlying system calls here fail, this will print an error and
   // return false
 
-#if !defined(_WINDOWS)
-  int free_fds = 0;
-
-  struct rlimit limit = { .rlim_cur = 0, .rlim_max = 0 };
-
-  // Get the current soft limit on the number of file descriptors.
-  if(getrlimit(RLIMIT_NOFILE, &limit) == 0) {
-    // If we have infinite file descriptors, always return true.
-    if( limit.rlim_max == RLIM_INFINITY ) {
-      return true;
-    }
-
-    // Poll the available file descriptors.
-    // The POSIX specification guarantees that rlim_cur will always be less or
-    // equal to the process's initial rlim_max, so we don't need an additional
-    // bounds check here.
-    if(poll(&pollfds[0], limit.rlim_cur, 1) >= 0) {
-      for(rlim_t i=0; i<limit.rlim_cur; i++) {
-        if(pollfds[i].revents & POLLNVAL) {
-          free_fds++;
-        }
-        if (free_fds >= FREE_FD_BUFFER) {
-          // Checked enough FDs are not opened.
-          return true;
-        }
-      }
-    } else {
-      // poll() may fail if interrupted, if the pollfds array is a bad pointer,
-      // if nfds exceeds RLIMIT_NOFILE, or if the system is out of memory.
-      XmlRpcUtil::error("XmlRpcServer::enoughFreeFDs: poll() failed: %s",
-                        strerror(errno));
-    }
-  } else {
-    // The man page for getrlimit says that it can fail if the requested
-    // resource is invalid or the second argument is invalid. I'm not sure
-    // either of these can actually fail in this code, but it's better to
-    // check.
-    XmlRpcUtil::error("XmlRpcServer::enoughFreeFDs: Could not get open file "
-                      "limit, getrlimit() failed: %s", strerror(errno));
-  }
-
-  return false;
-#else
   return true;
-#endif
 }
 
 
