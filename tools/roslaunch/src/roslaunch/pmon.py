@@ -565,7 +565,7 @@ class ProcessMonitor(Thread):
                                 p.required, p.exit_code)
                         exit_code_str = p.get_exit_description()
                         if p.required:
-                            printerrlog('='*80+"REQUIRED process [%s] has died!\n%s\nInitiating shutdown!\n"%(p.name, exit_code_str)+'='*80)
+                            printerrlog('='*80+"\nREQUIRED process [%s] has died!\n%s\nInitiating shutdown!\n"%(p.name, exit_code_str)+'='*80)
                             self.is_shutdown = True
                             if p.exit_code != 0:
                                 msg = 'Going to exit due to non-zero exit code ({})'.format(p.exit_code)
