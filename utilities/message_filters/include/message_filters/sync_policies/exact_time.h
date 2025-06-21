@@ -147,41 +147,25 @@ struct ExactTime : public PolicyBase<M0, M1, M2, M3, M4, M5, M6, M7, M8>
   template<class C>
   Connection registerDropCallback(const C& callback)
   {
-  #ifndef _WIN32
-    return drop_signal_.template addCallback(callback);
-  #else
     return drop_signal_.addCallback(callback);
-  #endif
   }
 
   template<class C>
   Connection registerDropCallback(C& callback)
   {
-  #ifndef _WIN32
-    return drop_signal_.template addCallback(callback);
-  #else
     return drop_signal_.addCallback(callback);
-  #endif
   }
 
   template<class C, typename T>
   Connection registerDropCallback(const C& callback, T* t)
   {
-  #ifndef _WIN32
-    return drop_signal_.template addCallback(callback, t);
-  #else
     return drop_signal_.addCallback(callback, t);
-  #endif
   }
 
   template<class C, typename T>
   Connection registerDropCallback(C& callback, T* t)
   {
-  #ifndef _WIN32
-    return drop_signal_.template addCallback(callback, t);
-  #else
     return drop_signal_.addCallback(callback, t);
-  #endif
   }
 
   void setReset(const bool reset)
