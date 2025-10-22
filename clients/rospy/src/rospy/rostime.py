@@ -43,6 +43,7 @@ import sys
 import threading
 import time
 import traceback
+from typing import overload
 
 import rospy.exceptions
 
@@ -77,7 +78,13 @@ class Duration(genpy.Duration):
     """
     __slots__ = []
 
-    def __init__(self, secs=0, nsecs=0):
+    @overload
+    def __init__(self, secs : float, nsecs : None = None):
+        ...
+    @overload
+    def __init__(self, secs : int, nsecs : int):
+        ...
+    def __init__(self, secs : int | float = 0, nsecs : int | None = 0):
         """
         Create new Duration instance. secs and nsecs are integers and
         correspond to the ROS 'duration' primitive type.
