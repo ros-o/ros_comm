@@ -1908,7 +1908,7 @@ class _IndexEntry200(_IndexEntry):
         return '%d.%d: %d+%d' % (self.time.secs, self.time.nsecs, self.chunk_pos, self.offset)
     
 def _get_message_type(info):
-    message_type = _message_types.get(info.md5sum)
+    message_type = _message_types.get(info.datatype + info.md5sum)
     if message_type is None:
         try:
             message_type = genpy.dynamic.generate_dynamic(info.datatype, info.msg_def)[info.datatype]
@@ -1920,7 +1920,7 @@ def _get_message_type(info):
         except genmsg.MsgGenerationException as ex:
             raise ROSBagException('Error generating datatype %s: %s' % (info.datatype, str(ex)))
 
-        _message_types[info.md5sum] = message_type
+        _message_types[info.datatype + info.md5sum] = message_type
 
     return message_type
 
