@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 if(CATKIN_ENABLE_TESTING)
-  find_package(Boost REQUIRED COMPONENTS filesystem system)
+  find_package(Boost REQUIRED COMPONENTS filesystem)
 
   include_directories(include ${catkin_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
